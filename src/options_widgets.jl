@@ -28,12 +28,18 @@ function togglebuttons(labels_values::Associative;
             """ selected.indexOf($value) == -1 ? selected.push($value) :
                     selected.splice(selected.indexOf($value), 1) """
         )
-        dom"""md-button[value=$value, id=$i]"""(btnlabel;
-                                        attributes=Dict("v-on:click"=>select_fn))
+        dom"""md-button[value=$value, id=$i, class=md-raised]"""(
+            btnlabel;
+            attributes=Dict("v-on:click"=>select_fn)
+        )
     end
     attrdict = Dict{String, Any}()
     !multiselect && (attrdict["md-single"] = true)
-    template = dom"md-button-toggle"(dom"span"("$label "), btns...; attributes=attrdict)
+    template = dom"div"(
+        wdglabel(label),
+        dom"md-button-toggle"(btns...; attributes=attrdict),
+        style=Dict(:display=>"inline-flex")
+    )
     toglbtns = InteractNext.make_widget(template, ob; obskey=:selected)
 end
 
@@ -50,12 +56,13 @@ togglebuttons(vals::AbstractArray; kwargs...) =
 ```
 radiobuttons(labels_values::Associative;
               value = first(values(labels_values)),
-              ob::Observable = Observable(value))
+              ob::Observable = Observable(value),
+              label="")
 ```
 e.g. `radiobuttons(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
 """
 function radiobuttons(labels_values::Associative;
-                       ob = nothing, value=nothing)
+                       ob = nothing, value=nothing, label="")
     defaultval = first(values(labels_values))
     ob, value = init_wsigval(ob, value; default=defaultval)
     # radio buttons only return strings, so we create a shadow obs
@@ -63,10 +70,10 @@ function radiobuttons(labels_values::Associative;
     conversion_fn = method_exists(convert, (Type{eltype(ob)}, String)) ? convert : parse
     map!((v)->conversion_fn(eltype(ob), v), ob, obshadow)
     btns = map(enumerate(labels_values)) do i_label_value
-        i,(label, value) = i_label_value
-        dom"""md-radio[v-model=radio, md-value=$value, class=md-primary]"""(label)
+        i,(btnlabel, value) = i_label_value
+        dom"md-radio[v-model=radio, md-value=$value, class=md-primary]"(btnlabel)
     end
-    template = dom"div"(btns...)
+    template = dom"div"(wdglabel(label), btns...)
     radiobtns = InteractNext.make_widget(template, obshadow; realobs=ob, obskey=:radio)
 end
 
@@ -109,7 +116,7 @@ function dropdown(labels_values::Associative;
     end
     multi_str = multiselect ? ", multiple=true" : ""
     template =  dom"md-input-container"(
-                    dom"label"(label),
+                    dom"label"(wdglabel(label)),
                     dom"md-select[v-model=$modelkey$multi_str]"(menu_items...)
                 )
     dropmenu = InteractNext.make_widget(template, ob; obskey=Symbol(modelkey))

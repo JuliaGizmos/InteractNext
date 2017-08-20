@@ -48,3 +48,8 @@ medianelement(r::Union{Range, Array}) = r[medianidx(r)]
 medianelement(r::Associative) = collect(values(r))[medianidx(values(r))]
 
 inverse_dict(d::Associative) = Dict(zip(values(d), keys(d)))
+
+wdglabel(text; padt=5, padr=10, padb=0, padl=0) =
+    dom"label[class=md-subheading]"(text;
+        style=Dict(:padding=>"$(padt)px $(padr)px $(padb)px $(padl)px")
+    )

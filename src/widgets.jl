@@ -59,9 +59,15 @@ function slider{T}(data::Union{Range{T}, Vector{T}, Associative{<:Any, T}};
         map!((v)->data[v], ob, obshadow)
     end
 
-    push!(kwargs, (:ref, "slider"), ("v-model", "value"), (:style, "margin-top:30px"))
+    push!(kwargs, (:ref, "slider"), ("v-model", "value"))
     attrdict = Dict(kwargs)
-    template = dom"div"(label, dom"vue-slider"(attributes=attrdict))
+    template = dom"div"(
+        wdglabel(label),
+        dom"vue-slider"(attributes=attrdict,
+            style=Dict(:width=>"60%", :display=>"inline-block",
+                :padding=>"2px", Symbol("margin-top")=>"40px")
+        )
+    )
     s = make_widget(template, obshadow; realobs=ob)
 end
 
@@ -73,14 +79,17 @@ Same as `slider` just with orientation set to "vertical"
 vslider(data; kwargs...) = slider(data; orientation="vertical", kwargs...)
 
 """
-button(label=""; ob::Observable = Observable(0))
+button(text=""; ob::Observable = Observable(0))
 
-Note the label supports a special `clicks` variable that can be used like so:
-e.g. button(label="clicked {{clicks}} times")
+Note the button text supports a special `clicks` variable, e.g.:
+`button("clicked {{clicks}} times")`
 """
-function button(label=""; ob::Observable = Observable(0))
+function button(text=""; ob::Observable = Observable(0), label="")
     attrdict = Dict("v-on:click"=>"clicks += 1","class"=>"md-raised md-primary")
-    template = Node(Symbol("md-button"), attributes=attrdict)(label)
+    template = dom"div"(
+        wdglabel(label), 
+        dom"md-button"(text, attributes=attrdict)
+    )
     button = make_widget(template, clicks; obskey=:clicks)
 end
 
