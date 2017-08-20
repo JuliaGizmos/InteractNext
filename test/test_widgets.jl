@@ -98,13 +98,15 @@ WebIO.render_inline(m1) |> println;
 using InteractNext
 using Blink
 # using InteractNext, Blink
-using Plots
-plot(1:10) # MethodError due to world age until this is merged: https://github.com/JuliaPlots/Plots.jl/pull/916
-mp = @manipulate for k in 1:20
-    plot(x->sin(k*x), 0:0.1:30)
+using PlotlyJS
+mp = @manipulate for k in 1:20, a in ["so", "it", "seems"]
+    x = 0:0.1:30
+    y = sin.(k*x)
+    (a, plot(x, y))
 end
 w = Window()
 body!(w, mp)
+# ^^^
 
 #---
 using Mux

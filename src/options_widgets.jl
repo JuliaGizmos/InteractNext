@@ -17,22 +17,23 @@ corresponding to all selected buttons
 e.g. `togglebuttons(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
 """
 function togglebuttons(labels_values::Associative;
-                       ob = nothing, value=nothing, multiselect=false)
+                       ob = nothing, value=nothing, multiselect=false, label="")
     defaultval = multiselect ? valtype(labels_values)[] : first(values(labels_values))
     ob, value = init_wsigval(ob, value; default=defaultval)
     btns = map(enumerate(labels_values)) do i_label_value
-        i,(label, value) = i_label_value
+        i,(btnlabel, value) = i_label_value
+        value = JSON.json(value) # strings need to be quoted
         select_fn = "selected=$value"
         multiselect && (select_fn =
             """ selected.indexOf($value) == -1 ? selected.push($value) :
                     selected.splice(selected.indexOf($value), 1) """
         )
-        dom"""md-button[value=$value, id=$i]"""(label;
+        dom"""md-button[value=$value, id=$i]"""(btnlabel;
                                         attributes=Dict("v-on:click"=>select_fn))
     end
     attrdict = Dict{String, Any}()
     !multiselect && (attrdict["md-single"] = true)
-    template = Node(Symbol("md-button-toggle"); attributes=attrdict)(btns...)
+    template = dom"md-button-toggle"(dom"span"("$label "), btns...; attributes=attrdict)
     toglbtns = InteractNext.make_widget(template, ob; obskey=:selected)
 end
 
