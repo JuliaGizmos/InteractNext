@@ -18,12 +18,16 @@ e.g. `togglebuttons(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
 """
 function togglebuttons(labels_values::Associative;
                        ob = nothing, value=nothing, multiselect=false, label="")
-    defaultval = multiselect ? valtype(labels_values)[] : first(values(labels_values))
+    defaultval = multiselect ?
+        Vector{valtype(labels_values)}() : first(values(labels_values))
     ob, value = init_wsigval(ob, value; default=defaultval)
-    buttons = dom"""md-button[:data-label=label, v-on:click=select_fn]"""(
-        "{{label}}",
-        attributes=Dict("v-for"=>"(value, label) in labels_values") # this don't parse well in the @dom_str
-    )
+    buttons =
+        dom"md-button[:data-label=label, v-on:click=select_fn, :key=idx]"(
+            "{{label}}",
+            # commas in attribute values (value, label, idx), don't parse well
+            # in the dom"...", so we'll use the `attributes` kwarg
+            attributes=Dict("v-for"=>"(value, label, idx) in labels_values")
+        )
     select_fn =
         @js function (event)
             @var el = event.target
@@ -39,7 +43,7 @@ function togglebuttons(labels_values::Associative;
 
     template = dom"div"(
         wdglabel(label),
-        dom"md-button-toggle[:md-single=single_select]"(buttons),
+        dom"md-button-toggle[class=md-raised md-primary, :md-single=single_select]"(buttons),
         style=Dict(:display=>"inline-flex")
     )
     toglbtns = InteractNext.make_widget(template, ob;

@@ -21,7 +21,7 @@ const widget_deps = [
     Dict("url"=>"https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.8.2/katex.min.css", "type"=>"css"),
 
     # Vue material CSS
-    Dict("url"=>"https://gitcdn.xyz/repo/vuematerial/vue-material/v0.7.4/dist/vue-material.css", "type"=>"css"),
+    Dict("url"=>"https://gitcdn.xyz/repo/JobJob/vue-material/css-dist/dist/vue-material.css", "type"=>"css"),
     # Dict("url"=>"https://gitcdn.xyz/repo/vuematerial/vue-material/develop/dist/vue-material.css", "type"=>"css"),
 
     # Widget js libs whose paths are set in the call to SystemJS.config
