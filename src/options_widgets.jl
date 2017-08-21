@@ -20,27 +20,32 @@ function togglebuttons(labels_values::Associative;
                        ob = nothing, value=nothing, multiselect=false, label="")
     defaultval = multiselect ? valtype(labels_values)[] : first(values(labels_values))
     ob, value = init_wsigval(ob, value; default=defaultval)
-    btns = map(enumerate(labels_values)) do i_label_value
-        i,(btnlabel, value) = i_label_value
-        value = JSON.json(value) # strings need to be quoted
-        select_fn = "selected=$value"
-        multiselect && (select_fn =
-            """ selected.indexOf($value) == -1 ? selected.push($value) :
-                    selected.splice(selected.indexOf($value), 1) """
-        )
-        dom"""md-button[value=$value, id=$i, class=md-raised]"""(
-            btnlabel;
-            attributes=Dict("v-on:click"=>select_fn)
-        )
-    end
-    attrdict = Dict{String, Any}()
-    !multiselect && (attrdict["md-single"] = true)
+    buttons = dom"""md-button[:data-label=label, v-on:click=select_fn]"""(
+        "{{label}}",
+        attributes=Dict("v-for"=>"(value, label) in labels_values") # this don't parse well in the @dom_str
+    )
+    select_fn =
+        @js function (event)
+            @var el = event.target
+            @var val = this.labels_values[el.dataset.label]
+            if (this.single_select)
+                this.selected=val
+            else
+                this.selected.indexOf(val) == -1 ?
+                    this.selected.push(val) : # push if not in list
+                    this.selected.splice(this.selected.indexOf(val), 1) # remove if in list
+            end
+        end
+
     template = dom"div"(
         wdglabel(label),
-        dom"md-button-toggle"(btns...; attributes=attrdict),
+        dom"md-button-toggle[:md-single=single_select]"(buttons),
         style=Dict(:display=>"inline-flex")
     )
-    toglbtns = InteractNext.make_widget(template, ob; obskey=:selected)
+    toglbtns = InteractNext.make_widget(template, ob;
+        obskey=:selected, methods=Dict("select_fn"=>select_fn),
+        data=Dict{Symbol, Any}(:single_select=>!multiselect, :labels_values=>labels_values),
+    )
 end
 
 """
