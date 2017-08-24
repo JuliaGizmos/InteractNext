@@ -85,7 +85,8 @@ function slider{T}(vals::Union{Range{T}, Vector{T}, Associative{<:Any, T}};
         wdglabel(label),
         dom"vue-slider[$prop_str]"(
             style=Dict(:width=>"60%", :display=>"inline-block",
-                :padding=>"2px", Symbol("margin-top")=>"40px")
+                :padding=>"2px", Symbol("margin-top")=>"40px",
+                Symbol("margin-bottom")=>"25px")
         )
     )
     s = make_widget(template, ob; data=data)

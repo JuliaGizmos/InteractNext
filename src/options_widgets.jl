@@ -22,7 +22,8 @@ function togglebuttons(labels_values::Associative;
         Vector{valtype(labels_values)}() : first(values(labels_values))
     ob, value = init_wsigval(ob, value; default=defaultval)
     buttons =
-        dom"md-button[:data-label=label, v-on:click=select_fn(value), :key=idx]"(
+        dom"md-button[:data-label=label, v-on:click=select_fn(value), :key=idx,
+                      :class={'md-toggle': value == selected}]"(
             "{{label}}",
             # commas in attribute values (value, label, idx), don't parse well
             # in the dom"...", so we'll use the `attributes` kwarg
