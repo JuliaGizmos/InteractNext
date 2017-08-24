@@ -5,9 +5,13 @@ latex(value; label="") = katex_widg(label, Observable(stringmime("text/latex", v
 
 function katex_widg(label, ob::Observable{<:AbstractString})
     id = WebIO.newid("tex")
+    # note using v-html was necessary so that Vue would handle katex replacing
+    # dom contents when it renders
     template = dom"div"(label, dom"span#$id[v-html=mathhtml]"(""))
     computed = Dict("mathhtml"=>@js function()
-        # render latex after DOM has been updated
+        # render latex after DOM has been updated. At time of writing, katex
+        # wouldn't render to string with delimiters, so had to use this nextTick
+        # malarkey
         this["\$nextTick"](function ()
             @var el = this["\$el"].querySelector("#"+$id)
             katex.renderMathInElement(el, d("delimiters"=> [

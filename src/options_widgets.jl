@@ -22,16 +22,14 @@ function togglebuttons(labels_values::Associative;
         Vector{valtype(labels_values)}() : first(values(labels_values))
     ob, value = init_wsigval(ob, value; default=defaultval)
     buttons =
-        dom"md-button[:data-label=label, v-on:click=select_fn, :key=idx]"(
+        dom"md-button[:data-label=label, v-on:click=select_fn(value), :key=idx]"(
             "{{label}}",
             # commas in attribute values (value, label, idx), don't parse well
             # in the dom"...", so we'll use the `attributes` kwarg
             attributes=Dict("v-for"=>"(value, label, idx) in labels_values")
         )
     select_fn =
-        @js function (event)
-            @var el = event.target
-            @var val = this.labels_values[el.dataset.label]
+        @js function (val)
             if (this.single_select)
                 this.selected=val
             else
@@ -48,7 +46,7 @@ function togglebuttons(labels_values::Associative;
     )
     toglbtns = InteractNext.make_widget(template, ob;
         obskey=:selected, methods=Dict("select_fn"=>select_fn),
-        data=Dict{Symbol, Any}(:single_select=>!multiselect, :labels_values=>labels_values),
+        data=Dict{Symbol, Any}(:single_select=>!multiselect, :labels_values=>labels_values)
     )
 end
 
