@@ -8,13 +8,14 @@ include("output_widgets.jl")
 
 """
 ```
-function slider(data; # Range or Vector or Associative
+function slider(vals; # Range or Vector or Associative
                 value=medianelement(range),
                 ob::Observable=Observable(value),
                 label="", kwargs...)
 ```
 
-Creates a slider widget which updates observable `ob` when the slider is changed:
+Creates a slider widget which can take on the values in `vals`, and updates
+observable `ob` when the slider is changed:
 ```
 # slider from Range
 s1 = slider(1:10; label="slide on", value="7")
@@ -36,39 +37,58 @@ slider_obs = obs(s3)
 ```
 
 Slider uses the Vue Slider Component from https://github.com/NightCatSama/vue-slider-component
-you can pass any properties you wish to set as keyword arguments, e.g.
+you can pass any properties you wish to set using kwargs, e.g.
 To make a vertical slider you can use
 ```
 s = slider(1:10; label="level", value="3", orientation="vertical")
 ```
 N.b. there is also a shorthand for that particular case - `vslider`
+
+If the propname is supposed to be kebab-cased (has a `-` in it), write it as
+camelCased. e.g. to set the `piecewise-label` property to `true`, use
+```
+s = slider(1:10; piecewiseLabel=true)
+```
+
 """
-function slider{T}(data::Union{Range{T}, Vector{T}, Associative{<:Any, T}};
+function slider{T}(vals::Union{Range{T}, Vector{T}, Associative{<:Any, T}};
                 value=nothing,
                 ob=nothing,
                 label="", kwargs...)
-    ob, value = init_wsigval(ob, value; typ=T, default=medianelement(data))
-    obshadow = ob
-    if data isa Range
-        push!(kwargs, (:min, first(data)), (:max, last(data)), (:interval, step(data)))
-    elseif data isa Vector
-        push!(kwargs, ("v-bind:data", JSON.json(collect(data))))
-    elseif data isa Associative
-        push!(kwargs, ("v-bind:data", data |> keys |> collect |> JSON.json))
-        obshadow = Observable(inverse_dict(data)[value])
-        map!((v)->data[v], ob, obshadow)
+    ob, value = init_wsigval(ob, value; typ=T, default=medianelement(vals))
+
+    vbindprops, data = kwargs2vueprops(kwargs)
+
+    # add the label to the component's data
+    data[:label] = label
+
+    if vals isa Range
+        for (key, value) in
+        ((:min, first(vals)), (:max, last(vals)), (:interval, step(vals)))
+            # set the data to be added to the Vue instance with the same key
+            data[key] = value
+            # bind the prop name to the data with the same key
+            vbindprops[key] = "$key"
+        end
+    elseif vals isa Vector
+        vbindprops["data"] = "vals"
+        # we use WebIO.jsexpr so that the slider can have functions as values
+        # which could be interesting
+        data["vals"] = WebIO.jsexpr(vals)
+    elseif vals isa Associative
+        vbindprops["data"] = "vals"
+        data["vals"] = WebIO.jsexpr(vals |> keys |> collect)
     end
 
-    push!(kwargs, (:ref, "slider"), ("v-model", "value"))
-    attrdict = Dict(kwargs)
+    prop_str = props2str(vbindprops, Dict("ref"=>"slider", "v-model"=>"value"))
     template = dom"div"(
         wdglabel(label),
-        dom"vue-slider"(attributes=attrdict,
+        dom"vue-slider[$prop_str]"(
             style=Dict(:width=>"60%", :display=>"inline-block",
                 :padding=>"2px", Symbol("margin-top")=>"40px")
         )
     )
-    s = make_widget(template, obshadow; realobs=ob)
+    s = make_widget(template, ob; data=data)
 end
 
 """
@@ -87,7 +107,7 @@ Note the button text supports a special `clicks` variable, e.g.:
 function button(text=""; ob::Observable = Observable(0), label="")
     attrdict = Dict("v-on:click"=>"clicks += 1","class"=>"md-raised md-primary")
     template = dom"div"(
-        wdglabel(label), 
+        wdglabel(label),
         dom"md-button"(text, attributes=attrdict)
     )
     button = make_widget(template, clicks; obskey=:clicks)
