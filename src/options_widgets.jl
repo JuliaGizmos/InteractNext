@@ -22,32 +22,42 @@ function togglebuttons(labels_values::Associative;
         Vector{valtype(labels_values)}() : first(values(labels_values))
     ob, value = init_wsigval(ob, value; default=defaultval)
     buttons =
-        dom"md-button[:data-label=label, v-on:click=select_fn(value), :key=idx,
-                      :class={'md-toggle': value == selected}]"(
+        dom"md-button[v-on:click=select_fn(value), :key=idx,
+                      :class={'md-toggle': is_selected(value)}]"(
             "{{label}}",
             # commas in attribute values (value, label, idx), don't parse well
             # in the dom"...", so we'll use the `attributes` kwarg
             attributes=Dict("v-for"=>"(value, label, idx) in labels_values")
         )
-    select_fn =
-        @js function (val)
-            if (this.single_select)
-                this.selected=val
-            else
-                this.selected.indexOf(val) == -1 ?
-                    this.selected.push(val) : # push if not in list
-                    this.selected.splice(this.selected.indexOf(val), 1) # remove if in list
-            end
+    select_fn = @js function (val)
+        if (this.single_select)
+            this.selected = val
+        else
+            this.selected.indexOf(val) === -1 ?
+                this.selected.push(val) : # push if not in list
+                this.selected.splice(this.selected.indexOf(val), 1) # remove if in list
         end
+    end
+    is_selected = @js function(val)
+        @var res
+        if (this.single_select)
+            res = (this.selected === val)
+        else
+            res = (this.selected.indexOf(val) >= 0)
+        end
+        return res
+    end
 
     template = dom"div"(
         wdglabel(label),
-        dom"md-button-toggle[class=md-raised md-primary, :md-single=single_select]"(buttons),
+        dom"md-button-toggle[class=md-raised md-primary, :md-single=single_select, :md-manual-toggle=manual_toggle]"(buttons),
         style=Dict(:display=>"inline-flex")
     )
     toglbtns = InteractNext.make_widget(template, ob;
-        obskey=:selected, methods=Dict("select_fn"=>select_fn),
-        data=Dict{Symbol, Any}(:single_select=>!multiselect, :labels_values=>labels_values)
+        obskey=:selected,
+        methods=Dict("select_fn"=>select_fn, "is_selected"=>is_selected),
+        data=Dict{Symbol, Any}(:single_select=>!multiselect,
+            :manual_toggle=>true, :labels_values=>labels_values)
     )
 end
 
@@ -73,16 +83,16 @@ function radiobuttons(labels_values::Associative;
                        ob = nothing, value=nothing, label="")
     defaultval = first(values(labels_values))
     ob, value = init_wsigval(ob, value; default=defaultval)
-    # radio buttons only return strings, so we create a shadow obs
-    obshadow = Observable(string(ob[]))
-    conversion_fn = method_exists(convert, (Type{eltype(ob)}, String)) ? convert : parse
-    map!((v)->conversion_fn(eltype(ob), v), ob, obshadow)
-    btns = map(enumerate(labels_values)) do i_label_value
-        i,(btnlabel, value) = i_label_value
-        dom"md-radio[v-model=radio, md-value=$value, class=md-primary]"(btnlabel)
-    end
-    template = dom"div"(wdglabel(label), btns...)
-    radiobtns = InteractNext.make_widget(template, obshadow; realobs=ob, obskey=:radio)
+    buttons =
+        dom"md-radio[v-model=radio, :md-value=value, :key=idx, class=md-primary]"(
+            "{{btnlabel}}",
+            # commas in attribute values (value, btnlabel, idx), don't parse well
+            # in the dom"...", so we'll use the `attributes` kwarg
+            attributes=Dict("v-for"=>"(value, btnlabel, idx) in labels_values")
+        )
+    template = dom"div"(wdglabel(label), buttons)
+    radiobtns = InteractNext.make_widget(template, ob; obskey=:radio,
+                    data=Dict{Symbol, Any}(:labels_values=>labels_values))
 end
 
 """
