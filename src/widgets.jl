@@ -55,7 +55,7 @@ function slider{T}(vals::Union{Range{T}, Vector{T}, Associative{<:Any, T}};
                 label="", kwargs...)
 
     if !(value isa Observable)
-        value = Observable{T}(value)
+        value = Observable{typeof(value)}(value) #lets us create interval slider using slider(range, value=[x,y])
     end
 
     kwdata = Dict{Propkey, Any}(kwargs)
