@@ -1,4 +1,4 @@
-export slider, vslider, button, checkbox, textbox
+export slider, vslider, button, checkbox, textbox, menu
 
 using DataStructures, JSON
 
@@ -55,7 +55,7 @@ function slider{T}(vals::Union{Range{T}, Vector{T}, Associative{<:Any, T}};
                 label="", kwargs...)
 
     if !(value isa Observable)
-        value = Observable{T}(value)
+        value = Observable{typeof(value)}(value) #lets us create interval slider using slider(range, value=[x,y])
     end
 
     kwdata = Dict{Propkey, Any}(kwargs)
@@ -215,6 +215,50 @@ function textbox(label="";
     textbox = vue(template, ["text"=>text])
     primary_obs!(textbox, "text")
     slap_material_design!(textbox)
+end
+
+"""
+`menu(text="", options=[])`
+
+Create a menu containing the options in options (as strings or menus). Its string-valued observable
+is updated to the name of the option selected in the menu.
+
+e.g `menu("menu", ["open", "edit", "quit"])`
+
+If a member in options is a menu, a submenu will be created for this option, and
+the observable of the main menu will take on the values of the submenu options.
+
+`menu("main menu", ["foo", "bar", menu("sub menu", ["sub foo", "sub bar"])])`
+"""
+function menu(text="", options=[])
+    clicked = Observable("")
+
+    menuitem(i) = warn("Only strings and menus supported as menu options")
+    function menuitem(i::WebIO.Scope)
+        if i.dom.instanceof.tag!=Symbol("md-menu")
+            menuitem(0)
+            i
+        else
+            i.dom.props[:attributes] = Dict(":md-offset-x"=>"100")
+            i
+       end
+   end
+    function menuitem(i::String)
+        attr = Dict("v-on:click" => "clicked = \"$i\"")
+        dom"md-menu-item"(i, attributes=attr)
+    end
+
+    propsbtn = Dict("md-menu-trigger"=>"")
+    template = dom"md-menu"(
+                            dom"md-button"(text, attributes=propsbtn),
+                            dom"md-menu-content"(
+                                                 (menuitem(i) for i in options)...
+                                                ),
+                           )
+
+    menu = vue(template, ["clicked"=>clicked]; obskey=:clicked)
+    primary_obs!(menu, "clicked")
+    slap_material_design!(menu)
 end
 
 function wdglabel(text; padt=5, padr=10, padb=0, padl=0, style=Dict())
