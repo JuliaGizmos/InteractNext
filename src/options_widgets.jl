@@ -1,18 +1,16 @@
-export togglebuttons, radiobuttons, dropdown
-
 """
-`togglebuttons(options::Associative; selected::Union{T, Observable}, multiselect=false)`
+`togglebuttons(options::Associative; selected::Union{T, Observable}, multiple=false)`
 
 Creates a set of toggle buttons whose labels will be the keys of options.
 
-If `multiselect=true` the observable will hold an array containing the values
+If `multiple=true` the observable will hold an array containing the values
 corresponding to all selected buttons
 
 e.g. `togglebuttons(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
 """
 function togglebuttons(options::Associative;
-                       multiselect=false, label="",
-                       selected = multiselect ?
+                       multiple=false, label="",
+                       selected = multiple ?
                            Vector{Int}() : medianelement(1:length(options)))
 
     if !(selected isa Observable)
@@ -62,7 +60,7 @@ function togglebuttons(options::Associative;
     end
 
     toglbtns = vue(template, ["selected" => selected,
-                              :single_select=>!multiselect,
+                              :single_select=>!multiple,
                               :manual_toggle=>true,
                               :options=>labels_idxs],
                    methods=Dict("select_fn"=>select_fn,
@@ -130,11 +128,11 @@ radiobuttons(vals::AbstractArray; kwargs...) =
 dropdown(options::Associative;
          value = first(values(options)),
          label = "select",
-         multiselect = false)
+         multiple = false)
 ```
 A dropdown menu whose item labels will be the keys of options.
 
-If `multiselect=true` the observable will hold an array containing the values
+If `multiple=true` the observable will hold an array containing the values
 of all selected items
 
 e.g. `dropdown(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
@@ -142,8 +140,8 @@ e.g. `dropdown(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
 """
 function dropdown(options::Associative;
                   label="select",
-                  multiselect=false,
-                  selected=multiselect ?
+                  multiple=false,
+                  selected=multiple ?
                       valtype(options)[] :
                       first(values(options)),
                   modelkey="dropd",
@@ -156,7 +154,7 @@ function dropdown(options::Associative;
         i,(itemlabel, value) = i_label_value
         dom"""md-option[key=$i, value=$value]"""(itemlabel)
     end
-    multi_str = multiselect ? ", multiple=true" : ""
+    multi_str = multiple ? ", multiple=true" : ""
     template = dom"md-input-container"(
                    dom"label"(wdglabel(label)),
                    dom"md-select[v-model=$modelkey$multi_str]"(menu_items...)

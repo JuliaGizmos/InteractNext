@@ -1,14 +1,14 @@
 """
-`filepicker(label=""; placeholder="", multiselect=false, accept="*")`
+`filepicker(label=""; placeholder="", multiple=false, accept="*")`
 
 Create a widget to select files.
 
-If `multiselect=true` the observable will hold an array containing the paths of all
+If `multiple=true` the observable will hold an array containing the paths of all
 selected files. Use `accept` to only accept some formats, e.g. `accept=".csv"`
 """
-function filepicker(label=""; placeholder="", multiselect=false, accept="*")
+function filepicker(::Material, lbl = "Choose a file..."; label=lbl, class="", placeholder="", multiple=false, accept="*")
 
-    if multiselect
+    if multiple
         onFileUpload = js"""function (event){
             var fileArray = Array.from(event)
             return this.path = fileArray.map(function (el) {return el.path;});
@@ -22,7 +22,7 @@ function filepicker(label=""; placeholder="", multiselect=false, accept="*")
         """
         path = Observable("")
     end
-    m_str = multiselect ? ",multiple=true" : ""
+    m_str = multiple ? ",multiple=true" : ""
     template = dom"md-input-container"(
         dom"label"(label),
         dom"md-file[v-on:selected=onFileUpload,placeholder=$placeholder$m_str,accept=$accept]"(),
