@@ -1,8 +1,9 @@
 function togglebuttons(::Material, options::Associative;
                        multiple=false, label="",
-                       selected = multiple ?
+                       value = multiple ?
                            Vector{Int}() : medianelement(1:length(options)))
 
+    selected=value
     if !(selected isa Observable)
         selected = Observable{Any}(selected)
     end
@@ -62,7 +63,8 @@ function togglebuttons(::Material, options::Associative;
 end
 
 function radiobuttons(::Material, options::Associative;
-                      selected=first(values(options)), label="")
+                      value=first(values(options)), label="")
+    selected=value
     if !(selected isa Observable)
         selected = Observable{Any}(selected)
     end
@@ -100,11 +102,13 @@ e.g. `dropdown(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
 function dropdown(::Material, options::Associative;
                   label="select",
                   multiple=false,
-                  selected=multiple ?
+                  value=multiple ?
                       valtype(options)[] :
                       first(values(options)),
                   modelkey="dropd",
                   kwargs...)
+
+    selected=value
     if !(selected isa Observable)
         selected = Observable{Any}(selected)
     end
