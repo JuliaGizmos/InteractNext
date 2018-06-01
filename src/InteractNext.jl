@@ -26,27 +26,19 @@ export Material
 
 struct Material<:InteractBase.WidgetTheme; end
 
-function InteractBase.libraries(::Material)
-        [
-            "/pkg/InteractMaterial/fonts.css",
-            "/pkg/InteractMaterial/material.css",
-            "/pkg/InteractMaterial/material.js",
-            "/pkg/InteractMaterial/slider.js",
-        ]
-end
-
 function InteractBase.slap_design!(w::Scope, T::Material)
-    InteractBase.slap_design!(w, libraries(T))
+    import!(w, "/pkg/InteractNext/vue-material.js")
+    import!(w, "/pkg/InteractNext/vue-material.css")
+    import!(w, "/pkg/InteractNext/fonts.css")
+    import!(w, "/pkg/InteractNext/index.js")
 
     onimport(w, @js function (Vue, VueMaterial)
         Vue.use(VueMaterial)
     end)
-
     onimport(w, @js function (Vue, vueSlider)
-            Vue.component("vue-slider", vueSlider)
+        Vue.component("vue-slider", vueSlider)
 
     end)
-
     w
 end
 

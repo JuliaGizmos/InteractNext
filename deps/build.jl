@@ -10,6 +10,6 @@ deps = [
     "https://gitcdn.xyz/cdn/JobJob/" * "vue-material/css-dist/dist/vue-material.css",
     "https://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons"
 ]
-for (name, dep) in zip(["material.js", "slider.js", "material.css", "fonts.css"], deps)
+for (name, dep) in zip(["vue-material.js", "index.js", "vue-material.css", "fonts.css"], deps)
     download(dep, joinpath(_pkg_assets, name))
 end

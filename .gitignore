@@ -4,6 +4,6 @@ test/scratch1\.html
 test/scratch2\.html
 
 assets/fonts.css
-assets/material.css
-assets/material.js
-assets/slider.js
+assets/vue-material.css
+assets/vue-material.js
+assets/index.js

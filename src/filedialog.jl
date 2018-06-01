@@ -29,6 +29,6 @@ function filepicker(::Material, lbl = "Choose a file..."; label=lbl, class="", p
     )
 
     filewidget = vue(template, ["path"=>path], methods = Dict("onFileUpload" => onFileUpload))
-    primary_obs!(filewidget, "path")
-    slap_material_design!(filewidget)
+    InteractBase.primary_obs!(filewidget, "path")
+    InteractBase.slap_design!(filewidget)
 end
