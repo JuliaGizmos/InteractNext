@@ -1,57 +1,9 @@
-export slider, vslider, button, checkbox, textbox, filepicker
-
 using DataStructures, JSON
 
-include("widget_utils.jl")
 include("options_widgets.jl")
-include("output_widgets.jl")
 include("filedialog.jl")
 
-"""
-```
-function slider(vals; # Range or Vector or Associative
-                value=medianelement(range),
-                label="", kwargs...)
-```
-
-Creates a slider widget which can take on the values in `vals`, and updates
-observable `ob` when the slider is changed:
-```
-# slider from Range
-s1 = slider(1:10; label="slide on", value="7")
-slider_obs = observe(s1)
-
-# slider from Array
-lyrics = ["When","I","wake","up","yes","I ","know","I'm","gonna","be"]
-s2 = slider(lyrics; label="Proclaim", value="7")
-slider_obs = observe(s2)
-
-# slider from Associative
-# The slider will have keys(d) for its labels, while observe(s3) will hold d[selected]
-
-using DataStructures
-lyrics = ["When","I","wake","up","yes","I ","know","I'm","gonna","be"]
-d = OrderedDict(zip(lyrics, 1:length(lyrics))
-s3 = slider(d); label="No true Scotsman", value="7")
-slider_obs = observe(s3)
-```
-
-Slider uses the Vue Slider Component from https://github.com/NightCatSama/vue-slider-component
-you can pass any properties you wish to set using kwargs, e.g.
-To make a vertical slider you can use
-```
-s = slider(1:10; label="level", value="3", direction="vertical")
-```
-N.b. there is also a shorthand for that particular case - `vslider`
-
-If the propname is supposed to be kebab-cased (has a `-` in it), write it as
-camelCased. e.g. to set the `piecewise-label` property to `true`, use
-```
-s = slider(1:10; piecewiseLabel=true)
-```
-
-"""
-function slider{T}(vals::Union{Range{T}, Vector{T}, Associative{<:Any, T}};
+function slider{T}(::Material, vals::Range{T};
                 value=medianelement(vals),
                 label="", kwargs...)
 
@@ -142,48 +94,19 @@ end
 
 Same as `slider` just with direction set to "vertical"
 """
-vslider(data; kwargs...) = slider(data; direction="vertical", kwargs...)
+vslider(args...; kwargs...) = slider(args...; direction="vertical", kwargs...)
 
-function slap_material_design!(w::Scope)
-    import!(w, "https://gitcdn.xyz/cdn/JobJob/" *
-               "vue-material/js-dist/dist/vue-material.js")
-    import!(w, "https://gitcdn.xyz/cdn/JobJob/" *
-               "vue-material/css-dist/dist/vue-material.css")
-    import!(w, "https://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons")
-    onimport(w, @js function (Vue, VueMaterial)
-        Vue.use(VueMaterial)
-    end)
-    w
-end
-
-"""
-`button(content=""; clicks::Observable)`
-
-A button. `content` goes inside the button.
-
-Note the button `content` supports a special `clicks` variable, e.g.:
-`button("clicked {{clicks}} times")`
-"""
-function button(text=""; clicks::Observable = Observable(0), label="")
+function button(::Material, text=""; value=0, label=text)
+    (value isa Observable) || (value = Observable(value))
     attrdict = Dict("v-on:click"=>"clicks += 1","class"=>"md-raised md-primary")
-    template = dom"div"(
-        wdglabel(label),
-        dom"md-button"(text, attributes=attrdict)
-    )
-    button = vue(template, ["clicks" => clicks]; obskey=:clicks)
+    template = dom"md-button"(label, attributes=attrdict)
+    button = vue(template, ["clicks" => value]; obskey=:clicks)
     primary_obs!(button, "clicks")
-    slap_material_design!(button)
+    slap_design!(button)
 end
 
-"""
-`checkbox(checked::Union{Bool, Observable}=false; label)`
-
-A checkbox.
-
-e.g. `checkbox(label="be my friend?")`
-"""
-function checkbox(checked=false; label="")
-
+function checkbox(::Material; label="", value=false)
+    checked=value
     if !(checked isa Observable)
         checked = Observable(checked)
     end
@@ -192,7 +115,7 @@ function checkbox(checked=false; label="")
     template = dom"md-checkbox"(attributes=attrdict)(label)
     checkbox = vue(template, ["checked" => checked])
     primary_obs!(checkbox, "checked")
-    slap_material_design!(checkbox)
+    slap_design!(checkbox)
 end
 
 """
@@ -202,24 +125,24 @@ Create a text input area with an optional `label`
 
 e.g. `textbox("enter number:")`
 """
-function textbox(label="";
-                 text = "",
-                 placeholder="")
+function textbox(::Material, label="";
+                 value = "",
+                 placeholder=label)
 
+    text=value
     if !(text isa Observable)
         text = Observable(text)
     end
     template = dom"md-input-container"(
-                 dom"label"(label),
                  dom"""md-input[v-model=text, placeholder=$placeholder]"""(),
                )
 
     textbox = vue(template, ["text"=>text])
     primary_obs!(textbox, "text")
-    slap_material_design!(textbox)
+    slap_design!(textbox)
 end
 
-function wdglabel(text; padt=5, padr=10, padb=0, padl=0, style=Dict())
+function wdglabel(::Material, text; padt=5, padr=10, padb=0, padl=0, style=Dict())
     fullstyle = Dict(:padding=>"$(padt)px $(padr)px $(padb)px $(padl)px")
     merge!(fullstyle, style)
     dom"label[class=md-subheading]"(text;

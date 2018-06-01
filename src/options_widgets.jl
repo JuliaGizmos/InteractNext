@@ -1,20 +1,9 @@
-export togglebuttons, radiobuttons, dropdown
-
-"""
-`togglebuttons(options::Associative; selected::Union{T, Observable}, multiselect=false)`
-
-Creates a set of toggle buttons whose labels will be the keys of options.
-
-If `multiselect=true` the observable will hold an array containing the values
-corresponding to all selected buttons
-
-e.g. `togglebuttons(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
-"""
-function togglebuttons(options::Associative;
-                       multiselect=false, label="",
-                       selected = multiselect ?
+function togglebuttons(::Material, options::Associative;
+                       multiple=false, label="",
+                       value = multiple ?
                            Vector{Int}() : medianelement(1:length(options)))
 
+    selected=value
     if !(selected isa Observable)
         selected = Observable{Any}(selected)
     end
@@ -62,7 +51,7 @@ function togglebuttons(options::Associative;
     end
 
     toglbtns = vue(template, ["selected" => selected,
-                              :single_select=>!multiselect,
+                              :single_select=>!multiple,
                               :manual_toggle=>true,
                               :options=>labels_idxs],
                    methods=Dict("select_fn"=>select_fn,
@@ -70,32 +59,12 @@ function togglebuttons(options::Associative;
     toglbtns["selected"] = selected
     @private toglbtns["value"] = ob2
     primary_obs!(toglbtns, ob2)
-    slap_material_design!(toglbtns)
+    slap_design!(toglbtns)
 end
 
-"""
-`togglebuttons(values::AbstractArray; kwargs...)`
-
-togglebuttons with labels `string.(values)`
-
-see togglebuttons(options::Associative; ...) for more details
-"""
-togglebuttons(vals::AbstractArray; kwargs...) =
-    togglebuttons(OrderedDict(zip(string.(vals), vals)); kwargs...)
-
-"""
-```
-radiobuttons(options::Associative;
-             value::Union{T, Observable} = first(values(options)),
-             label="")
-```
-
-e.g. `radiobuttons(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
-
-optionally, you can specify a `label` for the radio button group
-"""
-function radiobuttons(options::Associative;
-                      selected=first(values(options)), label="")
+function radiobuttons(::Material, options::Associative;
+                      value=first(values(options)), label="")
+    selected=value
     if !(selected isa Observable)
         selected = Observable{Any}(selected)
     end
@@ -112,42 +81,34 @@ function radiobuttons(options::Associative;
                                :options=>options])
     radiobtns["selected"] = selected
     primary_obs!(radiobtns, "radio")
-    slap_material_design!(radiobtns)
+    slap_design!(radiobtns)
 end
-
-"""
-`radiobuttons(values::AbstractArray; kwargs...)`
-
-radiobuttons with labels `string.(values)`
-
-see radiobuttons(options::Associative; ...) for more details
-"""
-radiobuttons(vals::AbstractArray; kwargs...) =
-    radiobuttons(OrderedDict(zip(string.(vals), vals)); kwargs...)
 
 """
 ```
 dropdown(options::Associative;
          value = first(values(options)),
          label = "select",
-         multiselect = false)
+         multiple = false)
 ```
 A dropdown menu whose item labels will be the keys of options.
 
-If `multiselect=true` the observable will hold an array containing the values
+If `multiple=true` the observable will hold an array containing the values
 of all selected items
 
 e.g. `dropdown(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
 
 """
-function dropdown(options::Associative;
+function dropdown(::Material, options::Associative;
                   label="select",
-                  multiselect=false,
-                  selected=multiselect ?
+                  multiple=false,
+                  value=multiple ?
                       valtype(options)[] :
                       first(values(options)),
                   modelkey="dropd",
                   kwargs...)
+
+    selected=value
     if !(selected isa Observable)
         selected = Observable{Any}(selected)
     end
@@ -156,7 +117,7 @@ function dropdown(options::Associative;
         i,(itemlabel, value) = i_label_value
         dom"""md-option[key=$i, value=$value]"""(itemlabel)
     end
-    multi_str = multiselect ? ", multiple=true" : ""
+    multi_str = multiple ? ", multiple=true" : ""
     template = dom"md-input-container"(
                    dom"label"(wdglabel(label)),
                    dom"md-select[v-model=$modelkey$multi_str]"(menu_items...)
@@ -164,14 +125,5 @@ function dropdown(options::Associative;
     dropmenu = vue(template, [modelkey => selected], kwargs...)
     dropmenu["selected"] = dropmenu[modelkey]
     primary_obs!(dropmenu, "selected")
-    slap_material_design!(dropmenu)
+    slap_design!(dropmenu)
 end
-
-"""
-`dropdown(values::AbstractArray; kwargs...)`
-dropdown with labels `string.(values)`
-
-see dropdown(options::Associative; ...) for more details
-"""
-dropdown(vals::AbstractArray; kwargs...) =
-    dropdown(OrderedDict(zip(string.(vals), vals)); kwargs...)
