@@ -1,14 +1,4 @@
-"""
-`togglebuttons(options::Associative; selected::Union{T, Observable}, multiple=false)`
-
-Creates a set of toggle buttons whose labels will be the keys of options.
-
-If `multiple=true` the observable will hold an array containing the values
-corresponding to all selected buttons
-
-e.g. `togglebuttons(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
-"""
-function togglebuttons(options::Associative;
+function togglebuttons(::Material, options::Associative;
                        multiple=false, label="",
                        selected = multiple ?
                            Vector{Int}() : medianelement(1:length(options)))
@@ -68,31 +58,10 @@ function togglebuttons(options::Associative;
     toglbtns["selected"] = selected
     @private toglbtns["value"] = ob2
     primary_obs!(toglbtns, ob2)
-    slap_material_design!(toglbtns)
+    slap_design!(toglbtns)
 end
 
-"""
-`togglebuttons(values::AbstractArray; kwargs...)`
-
-togglebuttons with labels `string.(values)`
-
-see togglebuttons(options::Associative; ...) for more details
-"""
-togglebuttons(vals::AbstractArray; kwargs...) =
-    togglebuttons(OrderedDict(zip(string.(vals), vals)); kwargs...)
-
-"""
-```
-radiobuttons(options::Associative;
-             value::Union{T, Observable} = first(values(options)),
-             label="")
-```
-
-e.g. `radiobuttons(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
-
-optionally, you can specify a `label` for the radio button group
-"""
-function radiobuttons(options::Associative;
+function radiobuttons(::Material, options::Associative;
                       selected=first(values(options)), label="")
     if !(selected isa Observable)
         selected = Observable{Any}(selected)
@@ -110,18 +79,8 @@ function radiobuttons(options::Associative;
                                :options=>options])
     radiobtns["selected"] = selected
     primary_obs!(radiobtns, "radio")
-    slap_material_design!(radiobtns)
+    slap_design!(radiobtns)
 end
-
-"""
-`radiobuttons(values::AbstractArray; kwargs...)`
-
-radiobuttons with labels `string.(values)`
-
-see radiobuttons(options::Associative; ...) for more details
-"""
-radiobuttons(vals::AbstractArray; kwargs...) =
-    radiobuttons(OrderedDict(zip(string.(vals), vals)); kwargs...)
 
 """
 ```
@@ -138,7 +97,7 @@ of all selected items
 e.g. `dropdown(OrderedDict("good"=>1, "better"=>2, "amazing"=>9001))`
 
 """
-function dropdown(options::Associative;
+function dropdown(::Material, options::Associative;
                   label="select",
                   multiple=false,
                   selected=multiple ?
@@ -162,14 +121,5 @@ function dropdown(options::Associative;
     dropmenu = vue(template, [modelkey => selected], kwargs...)
     dropmenu["selected"] = dropmenu[modelkey]
     primary_obs!(dropmenu, "selected")
-    slap_material_design!(dropmenu)
+    slap_design!(dropmenu)
 end
-
-"""
-`dropdown(values::AbstractArray; kwargs...)`
-dropdown with labels `string.(values)`
-
-see dropdown(options::Associative; ...) for more details
-"""
-dropdown(vals::AbstractArray; kwargs...) =
-    dropdown(OrderedDict(zip(string.(vals), vals)); kwargs...)

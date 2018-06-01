@@ -4,6 +4,8 @@ using Reexport
 @reexport using InteractBase
 using WebIO, Vue, DataStructures, CSSUtil, JSExpr
 
+import InteractBase: primary_obs!, slap_design!, medianelement
+
 import InteractBase:
     filepicker,
     autocomplete,
